@@ -19,14 +19,14 @@ def load_images_from_list(original_path,path_list):
         )
     return np.array(images)
 
-    #Resizes all the images in an array
+#Resizes all the images in an array
 def resize_images(image_array,new_size=(64,64)):
     return np.array(
         [cv2.resize(image,new_size) for image in image_array]
     )
 
+#Saves a numpy array to file_path as a h5 file.
 def save_images_to_h5py(images,file_path):
-    #Saves a numpy array to file_path as a h5 file.
     h5f = h5py.File(file_path, "w")
     h5f.create_dataset('images', data=images)
     h5f.close()
@@ -40,6 +40,7 @@ def load_images_from_hdf5(file_path):
 
 def load_and_convert_images_from_folder(folder_path,package_size,image_target_size,filename="datasets/images"):
     image_paths = os.listdir(folder_path)
+    random.shuffle(image_paths)
     for i in range(len(image_paths)//package_size+1):
         images = load_images_from_list(folder_path,image_paths[i*package_size:(i+1)*package_size])
         images = resize_images(images,image_target_size)
@@ -48,7 +49,7 @@ def load_and_convert_images_from_folder(folder_path,package_size,image_target_si
 
 if __name__ == "__main__":
     import timeit
-    load_and_convert_images_from_folder("datasets/abstract_art_512",1,(64,64))
+    load_and_convert_images_from_folder("datasets/abstract_art_512",64,(64,64))
     #images =load_images_from_hdf5("datasets/images_0.h5")
 
 
