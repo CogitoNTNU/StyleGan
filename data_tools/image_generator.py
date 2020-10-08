@@ -1,8 +1,7 @@
 import os
-import cv2
 import numpy as np
 import random
-from data import load_images_from_hdf5
+from data_tools.data import load_images_from_hdf5
 
 #Før man kan kjøre denne må man kjøre load_and_convert_from_folder fra data.py, for å få bildene på riktig format.
 def image_generator(batch_size, data_folder):
