@@ -1,6 +1,6 @@
 from keras.models import Model
 from keras.optimizers import Adam
-def Adverserial(generator,discriminator):
+def get_adverserial(generator,discriminator):
     discriminator.trainable=False
     input_gen = generator.input
 

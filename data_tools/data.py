@@ -31,8 +31,8 @@ def save_images_to_h5py(images,file_path):
     h5f.create_dataset('images', data=images)
     h5f.close()
 
+#Loads a .h5 file from file_path
 def load_images_from_hdf5(file_path):
-    #
     h5f = h5py.File(file_path, 'r')
     images = h5f['images'][:]
     h5f.close()
