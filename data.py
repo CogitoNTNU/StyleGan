@@ -48,9 +48,7 @@ def load_and_convert_images_from_folder(folder_path,package_size,image_target_si
 
 
 if __name__ == "__main__":
-    import timeit
     load_and_convert_images_from_folder("datasets/abstract_art_512",64,(64,64))
-    #images =load_images_from_hdf5("datasets/images_0.h5")
 
 
 
