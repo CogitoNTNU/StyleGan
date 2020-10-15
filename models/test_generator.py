@@ -41,8 +41,10 @@ def test_scale_channels():
     ])
 
     # Transpose to ensure channels last
+    # Simulate a batch size of 1
     x = tf.transpose(x)
-    s = tf.constant([1.0, 2.0, 3.0])
+    x = tf.reshape(x, shape=(1,2,2,3))
+    s = tf.reshape(tf.constant([1.0, 2.0, 3.0]), shape=(1,3))
     z = generator.scale_channels([s, x])
     target_z = tf.transpose(tf.constant([
         [[0.0, 1.0], [1.0, 0.0]],

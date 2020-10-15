@@ -10,7 +10,10 @@ def normalize_channel_std(x):
     return tf.math.multiply(1/(std + epsilon), x) 
 
 def scale_channels(x):
-    return tf.math.multiply(x[0], x[1]) 
+    z = []
+    for i in range(x[0].shape[0]):
+        z.append(tf.math.multiply(x[0][i], x[1][i]))
+    return z
 
 # Style block according to Figure 2c in the StyleGAN2 paper
 # StyleGAN2 Appendix B: "We initialize all weights using the standard normal distribution, and all bias and noise scaling factors are initialized to zero.""
