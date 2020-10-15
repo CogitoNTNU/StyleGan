@@ -5,16 +5,15 @@ import math
 
 
 def normalize_channel_std(x):
-    epsilon = 1e-7
-    std = keras.backend.std(x, axis=[1,2])
+    epsilon = 1e-6
+    std = keras.backend.std(x, axis=[-3,-2]) 
     return tf.math.multiply(1/(std + epsilon), x) 
 
 def scale_channels(x):
     return tf.math.multiply(x[0], x[1]) 
 
 # Style block according to Figure 2c in the StyleGAN2 paper
-# StyleGAN2 Appendix B: 
-# We initialize all weights using the standard normal distribution, and all bias and noise scaling factors are initialized to zero.
+# StyleGAN2 Appendix B: "We initialize all weights using the standard normal distribution, and all bias and noise scaling factors are initialized to zero.""
 def style_block(x, latent_in, noise_in, channels=64, latent_style_layers=2, upsample=True, name="1"):
 
     # Channel scaling parameter from latent input
@@ -74,7 +73,6 @@ def SimpleGenerator(latent_dim=64, channels=64, target_size=64, latent_style_lay
 
 
     # Convert feature maps to RGB image
-    # TODO: Use LeakyReLU here?
     x = layers.Conv2D(filters=3, kernel_size=(3,3), kernel_initializer="random_normal", bias_initializer="zeros", activation="tanh", padding="same")(x)
 
     generator = tf.keras.Model(inputs=[dummy_in, latent_in] + noise_inputs, outputs=x, name="generator")
