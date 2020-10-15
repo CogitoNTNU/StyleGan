@@ -1,6 +1,6 @@
-from keras.models import Sequential
-from keras.layers import Dense, Conv2D, AveragePooling2D, Flatten
-from keras.layers.advanced_activations import LeakyReLU
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Conv2D, AveragePooling2D, Flatten
+from tensorflow.keras.layers import LeakyReLU
 
 
 def get_discriminator(img_size):

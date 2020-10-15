@@ -1,5 +1,5 @@
-from keras.models import Model
-from keras.optimizers import Adam
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
 def get_adverserial(generator,discriminator):
     discriminator.trainable=False
     input_gen = generator.input
@@ -10,3 +10,4 @@ def get_adverserial(generator,discriminator):
     gan = Model(input_gen, gan_output)
 
     return gan
+
