@@ -4,9 +4,12 @@ from tensorflow.keras import layers
 import math
 
 
+# (BATCH, WIDTH, HEIGHT, CHANNELS) x (BATCH, CHANNELS) 
+# (BATCH, WIDTH, HEIGHT, CHANNELS) x (BATCH, 1, 1, CHANNELS)
+
 def normalize_channel_std(x):
     epsilon = 1e-6
-    std = keras.backend.std(x, axis=[-3, -2])
+    std = keras.backend.std(x, axis=[-3, -2], keepdims=True) # Should result in (BATCH, 1, 1, CHANNELS) output shape
     return tf.math.multiply(1 / (std + epsilon), x)
 
 
@@ -24,6 +27,7 @@ def style_block(x, latent_in, noise_in, channels=64, latent_style_layers=2, upsa
         s = layers.LeakyReLU(alpha=0.2)(s)
 
     # Scale channels
+    s = layers.Reshape((1,1,channels), name=f"scale_reshape_{name}")(s)
     x = layers.Lambda(scale_channels, name=f"channel_scale_{name}")([s, x])
 
     # Upsampling

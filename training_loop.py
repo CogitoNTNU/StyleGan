@@ -1,16 +1,25 @@
+import logging
+import os
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+logging.getLogger('tensorflow').setLevel(logging.FATAL)
+
 import models.adverserial
 import models.discriminator
 import models.generator
-import models.naive_generator
+#import models.naive_generator
 import data_tools.image_generator
 from tensorflow.keras.optimizers import Adam
+
 import numpy as np
 import math
 import cv2
 
-IMG_SIZE=128
+IMG_SIZE=64
 LEARNING_RATE=0.0001
-BATCH_SIZE=1
+BATCH_SIZE=16
 NUM_BATCHES=10000
 LATENT_DIM=512
 DATA_FOLDER="datasets/"
@@ -32,6 +41,7 @@ adv.compile(optimizer=adv_optimizer,loss="binary_crossentropy", metrics=['accura
 image_generator = data_tools.image_generator.image_generator(BATCH_SIZE,DATA_FOLDER)
 
 for step in range(1,NUM_BATCHES+1):
+    print(f"Training step {step}")
     real_images = next(image_generator)
     real_labels = np.zeros((BATCH_SIZE,1))
 
@@ -52,8 +62,6 @@ for step in range(1,NUM_BATCHES+1):
     combined_labels = np.concatenate([generated_labels,real_labels])
 
     discriminator_loss = disc.train_on_batch([combined_images],combined_labels)
-
-
 
     random_latent_vectors=np.random.normal(size=(BATCH_SIZE,LATENT_DIM))
 
