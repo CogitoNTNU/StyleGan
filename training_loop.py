@@ -6,10 +6,11 @@ import data_tools.image_generator
 from tensorflow.keras.optimizers import Adam
 import numpy as np
 import math
+import cv2
 
-IMG_SIZE=64
+IMG_SIZE=128
 LEARNING_RATE=0.0001
-BATCH_SIZE=64
+BATCH_SIZE=1
 NUM_BATCHES=10000
 LATENT_DIM=512
 DATA_FOLDER="datasets/"
@@ -43,11 +44,9 @@ for step in range(1,NUM_BATCHES+1):
         noises.append(np.random.normal(size=(BATCH_SIZE,4*(2**i),4*(2**i),1)))
         noises.append(np.random.normal(size=(BATCH_SIZE,4*(2**(i)),4*(2**(i)),1)))
     noises.append(np.random.normal(size=(BATCH_SIZE, IMG_SIZE, IMG_SIZE, 1)))
-    for noise in noises:
-        print(noise.shape)
 
     generated_images = gen.predict([null_input,z_noise,*noises])
-    generated_labels = np.ones(BATCH_SIZE,1)
+    generated_labels = np.ones((BATCH_SIZE,1))
 
     combined_images=np.concatenate([generated_images,real_images])
     combined_labels = np.concatenate([generated_labels,real_labels])
@@ -58,8 +57,11 @@ for step in range(1,NUM_BATCHES+1):
 
     random_latent_vectors=np.random.normal(size=(BATCH_SIZE,LATENT_DIM))
 
-    adverserial_loss = adv.train_on_batch(random_latent_vectors,real_labels)
+    adverserial_loss = adv.train_on_batch([null_input,random_latent_vectors,*noises],real_labels)
 
+
+    cv2.imshow("1", generated_images[0])
+    cv2.waitKey(0)
     if not step%SAVE_INTERVAL:
         print("discriminator_loss",discriminator_loss)
         print("adverserial_loss",adverserial_loss)
