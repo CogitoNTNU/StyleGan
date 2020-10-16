@@ -1,11 +1,9 @@
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import numpy as np
 import math
 
-
-# (BATCH, WIDTH, HEIGHT, CHANNELS) x (BATCH, CHANNELS) 
-# (BATCH, WIDTH, HEIGHT, CHANNELS) x (BATCH, 1, 1, CHANNELS)
 
 def normalize_channel_std(x):
     epsilon = 1e-6
@@ -52,7 +50,7 @@ def style_block(x, latent_in, noise_in, channels=64, latent_style_layers=2, upsa
     return x
 
 
-def SimpleGenerator(latent_dim=64, channels=64, target_size=64, latent_style_layers=2):
+def get_generator(latent_dim=64, channels=64, target_size=64, latent_style_layers=2):
     num_upsamples = int(math.log2(target_size) - 2)
     side_length = 4
 
@@ -89,5 +87,14 @@ def SimpleGenerator(latent_dim=64, channels=64, target_size=64, latent_style_lay
     return generator
 
 
-def get_generator():
-    return None
+def random_generator_input(batch_size, latent_dim, img_size):
+    null_input = np.zeros((batch_size, 1))
+    z_noise = np.random.normal(size=(batch_size,latent_dim))
+    noises = []
+    num_upsamles = int(math.log2(img_size)-2)
+    noises.append(np.random.normal(size=(batch_size, 4, 4, 1)))
+    for i in range(1,num_upsamles):
+        noises.append(np.random.normal(size=(batch_size,4*(2**i),4*(2**i),1)))
+        noises.append(np.random.normal(size=(batch_size,4*(2**(i)),4*(2**(i)),1)))
+    noises.append(np.random.normal(size=(batch_size, img_size, img_size, 1)))
+    return [null_input, z_noise, *noises]
