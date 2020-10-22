@@ -1,5 +1,13 @@
 # StyleGan
 
+## Data
+
+1. Download the abstract art dataset from https://www.kaggle.com/greg115/abstract-art
+2. Place into folder `datasets/abstract_art_512`
+3. Run the command `python data_tools/data.py` to generate `.h5` files for training.
+
+
+
 ## IDUN notes
 
 Login: `ssh -l <username> idun-login1.hpc.ntnu.no`
