@@ -38,17 +38,22 @@ def load_images_from_hdf5(file_path):
     h5f.close()
     return images
 
-def load_and_convert_images_from_folder(folder_path,package_size,image_target_size,filename="datasets/images"):
+def load_and_convert_images_from_folder(folder_path, package_size, image_target_size, output_folder="datasets/images"):
     image_paths = os.listdir(folder_path)
     random.shuffle(image_paths)
-    for i in range(len(image_paths)//package_size+1):
+    packages = (len(image_paths)//package_size) + 1
+    print("Preprocessing images")
+    for i in range(packages):
+        print(f"{i}/{packages}")
         images = load_images_from_list(folder_path,image_paths[i*package_size:(i+1)*package_size])
         images = resize_images(images,image_target_size)
-        save_images_to_h5py(images, filename+ "_" + str(i)+".h5")
+        save_images_to_h5py(images, output_folder + "/" + str(i)+".h5")
 
 
 if __name__ == "__main__":
-    load_and_convert_images_from_folder("datasets/abstract_art_512",64,(64,64))
+    #load_and_convert_images_from_folder("datasets/abstract_art_512",64,(64,64))
+    #load_and_convert_images_from_folder("datasets/abstract_art_512", 128, (256,256), output_folder="datasets/abstract/256")
+    load_and_convert_images_from_folder("datasets/abstract_art_512", 64, (512,512), output_folder="datasets/abstract/512")
 
 
 

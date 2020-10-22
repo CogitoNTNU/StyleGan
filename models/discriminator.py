@@ -9,14 +9,13 @@ def get_discriminator(img_size):
     discriminator = LeakyReLU(0.2)(discriminator)
 
 
-    while(img_size > 4):
-        if ((1024*16)/img_size >= 512):
+    while img_size > 4:
+        if (1024 * 16) / img_size >= 512:
             filter = 512
         else:
-            filter = int((1024*16)/img_size)
+            filter = int((1024 * 16) / img_size)
         discriminator = box(discriminator, filter, (img_size, img_size, 3))
-        img_size = img_size/2
-
+        img_size = img_size / 2
 
 
     discriminator = Conv2D(512, kernel_size=3,input_shape=(4, 4, 3), padding='same')(discriminator)
