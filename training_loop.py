@@ -15,13 +15,13 @@ import os
 import time
 
 IMG_SIZE=512
-LEARNING_RATE=0.002
-BETA_1=0.0
+LEARNING_RATE=0.01 # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
+BETA_1=0.9
 BETA_2=0.99
 EPSILON=1e-8
 BATCH_SIZE=4
 NUM_BATCHES=10000
-DATA_FOLDER="datasets/abstract/512"
+DATA_FOLDER=f"datasets/abstract/{IMG_SIZE}"
 SAVE_INTERVAL = 500 
 
 # Generator parameters
@@ -40,7 +40,7 @@ print(disc.summary())
 disc_optimizer=Adam(lr=LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
 disc.compile(optimizer=disc_optimizer, loss="binary_crossentropy", metrics=['accuracy'])
 
-gen = models.generator.get_generator(latent_dim=LATENT_DIM, channels=CHANNELS, target_size=IMG_SIZE, latent_style_layers=LATENT_STYLE_LAYERS)
+gen = models.generator.get_skip_generator(latent_dim=LATENT_DIM, channels=CHANNELS, target_size=IMG_SIZE, latent_style_layers=LATENT_STYLE_LAYERS)
 print(gen.summary())
 adv = models.adverserial.get_adverserial(gen, disc)
 adv_optimizer=Adam(lr=LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
