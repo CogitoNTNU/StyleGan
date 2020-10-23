@@ -14,15 +14,15 @@ from datetime import datetime
 import os
 import time
 
-IMG_SIZE=64
+IMG_SIZE=512
 GENERATOR_LEARNING_RATE=0.001 # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
 DISCRIMINATOR_LEARNING_RATE=0.001
 BETA_1=0.9 # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
 BETA_2=0.99
 EPSILON=1e-8
-BATCH_SIZE=16
+BATCH_SIZE=8
 NUM_BATCHES=10000
-DATA_FOLDER=f"datasets/abstract/64"
+DATA_FOLDER=f"datasets/abstract/512"
 SAVE_INTERVAL=500 
 
 # Generator parameters
@@ -67,13 +67,19 @@ for step in range(NUM_BATCHES):
     gen_input = random_generator_input(BATCH_SIZE, LATENT_DIM, IMG_SIZE)
     generated_images = gen.predict(gen_input)
     generated_labels = np.ones((BATCH_SIZE, 1))
+    
+    # Store the best and worst generated image according to the discriminator
+    disc_labels = disc.predict_on_batch(generated_images).flatten()
+    i_max = np.argmax(disc_labels)
+    i_min = np.argmin(disc_labels)
+    tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_max]:.2f}.png", generated_images[i_max])
+    tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_min]:.2f}.png", generated_images[i_min])
 
     # Combine real and generated images
     combined_images = np.concatenate([generated_images, real_images])
     combined_labels = np.concatenate([generated_labels, real_labels])
 
     disc_loss = disc.train_on_batch([combined_images], combined_labels, return_dict=True)
-    tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}.png", generated_images[0])
 
     # Train generator to fool discriminator (discriminator should label generated images as real)
     target_labels = np.zeros((BATCH_SIZE,1))
