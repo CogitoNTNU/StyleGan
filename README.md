@@ -16,3 +16,8 @@ Start interactive GPU session: `srun --nodes=1 --partition=GPUQ --time=00:05:00 
 How to install dependencies and upload dataset?
 
 Use the module manager to load python and cudnn
+
+## Ideas
+
+Transfer learning for the discriminator
+Use existing weights for the convolutional layers and only train the classifiction/discrimination part
