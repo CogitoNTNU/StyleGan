@@ -54,7 +54,7 @@ if __name__ == "__main__":
     #load_and_convert_images_from_folder("datasets/abstract_art_512",64,(64,64))
     #load_and_convert_images_from_folder("datasets/abstract_art_512", 128, (256,256), output_folder="datasets/abstract/256")
     #load_and_convert_images_from_folder("datasets/abstract_art_512", 64, (512,512), output_folder="datasets/abstract/512")
-    load_and_convert_images_from_folder("datasets/abstract_art_singleton", 2, (512,512), output_folder="datasets/abstract/singleton_512")
+    load_and_convert_images_from_folder("datasets/abstract_art_singleton", 2, (64,64), output_folder="datasets/abstract/singleton_64")
 
 
 

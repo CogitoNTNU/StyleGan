@@ -14,21 +14,24 @@ from datetime import datetime
 import os
 import time
 
-IMG_SIZE=512
-GENERATOR_LEARNING_RATE=0.001 # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
+IMG_SIZE=64
+GENERATOR_LEARNING_RATE=0.01 # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
 DISCRIMINATOR_LEARNING_RATE=0.001
 BETA_1=0.0 # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
 BETA_2=0.99
 EPSILON=1e-8
-BATCH_SIZE=1
+BATCH_SIZE=16
 NUM_BATCHES=10000
-DATA_FOLDER=f"datasets/abstract/singleton_512"
-SAVE_INTERVAL = 500 
+DATA_FOLDER=f"datasets/abstract/singleton_64"
+SAVE_INTERVAL=500 
 
 # Generator parameters
-LATENT_DIM=64
-CHANNELS=64
-LATENT_STYLE_LAYERS=2
+LATENT_DIM=8
+CHANNELS=8
+LATENT_STYLE_LAYERS=1
+
+# Discriminator parameters
+FILTERS=8
 
 # Output folder
 now = datetime.now()
@@ -36,22 +39,18 @@ now_str = now.strftime("%Y-%m-%d_%H:%M:%S")
 OUTPUT_FOLDER = f"generated_images/{now_str}_{IMG_SIZE}"
 os.mkdir(OUTPUT_FOLDER)
 
-disc = models.discriminator.get_discriminator(IMG_SIZE)
+disc = models.discriminator.get_simple_discriminator(IMG_SIZE, filters=FILTERS)
 print(disc.summary())
-#disc_optimizer=Adam(lr=DISCRIMINATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
-disc_optimizer=SGD()
+disc_optimizer=Adam(lr=DISCRIMINATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
 disc.compile(optimizer=disc_optimizer, loss="binary_crossentropy", metrics=['accuracy'])
 
 gen = models.generator.get_skip_generator(latent_dim=LATENT_DIM, channels=CHANNELS, target_size=IMG_SIZE, latent_style_layers=LATENT_STYLE_LAYERS)
 print(gen.summary())
 adv = models.adverserial.get_adverserial(gen, disc)
-#adv_optimizer=Adam(lr=GENERATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
-adv_optimizer=SGD()
+adv_optimizer=Adam(lr=GENERATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
 adv.compile(optimizer=adv_optimizer, loss="binary_crossentropy", metrics=['accuracy'])
 
 image_generator = data_tools.image_generator.image_generator(BATCH_SIZE, DATA_FOLDER)
-
-# IDEA: Train component that fails
 
 discriminator_steps = 0
 generator_steps = 0
@@ -79,8 +78,7 @@ for step in range(NUM_BATCHES):
         discriminator_accuracy = discriminator_loss[1]
         discriminator_steps += 1
         print(f"Discriminator step: {discriminator_steps}, discrimination accuracy: {discriminator_accuracy}")
-        for i in range(BATCH_SIZE):
-            tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/d{discriminator_steps}_g{generator_steps}_{i}.png", generated_images[i])
+        tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/d{discriminator_steps}_g{generator_steps}.png", generated_images[0])
 
 
     # Generator training

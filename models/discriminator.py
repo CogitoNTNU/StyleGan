@@ -1,3 +1,4 @@
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, AveragePooling2D, Flatten, Add, LeakyReLU
 from tensorflow.keras import Input, Model
@@ -39,6 +40,31 @@ from tensorflow.keras import Input, Model
 #     downsampling_part = AveragePooling2D(pool_size=(2, 2))(discriminator)
 #     discriminator = Add()([conv_part, downsampling_part])
 #     return discriminator
+
+
+def get_simple_discriminator(img_size, filters=16):
+
+    z = Input(shape=(img_size, img_size, 3))
+
+    x = Conv2D(filters, kernel_size=1, padding='same')(z)
+    x = LeakyReLU(alpha=0.2)(x)
+
+    size = img_size
+    while size > 4:
+        x = Conv2D(filters, kernel_size=3, padding='same')(x)
+        x = LeakyReLU(alpha=0.2)(x)
+        x = Conv2D(filters, kernel_size=3, padding='same')(x)
+        x = LeakyReLU(alpha=0.2)(x)
+        x = AveragePooling2D(pool_size=(2, 2))(x)
+        size = size//2
+
+    x = Flatten()(x)
+    x = Dense(4*4*filters)(x)
+    x = LeakyReLU(alpha=0.2)(x)
+    x = Dense(1, activation="sigmoid")(x)
+
+    discriminator = tf.keras.Model(inputs=z, outputs=x, name="discriminator")
+    return discriminator
 
 
 def get_discriminator(img_size):
