@@ -6,7 +6,7 @@
 2. Place into folder `datasets/abstract_art_512`
 3. Run the command `python data_tools/data.py` to generate `.h5` files for training.
 
-
+Another good dataset for debugging: https://www.kaggle.com/spandan2/cats-faces-64x64-for-generative-models
 
 ## IDUN notes
 

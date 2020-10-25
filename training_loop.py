@@ -14,24 +14,24 @@ from datetime import datetime
 import os
 import time
 
-IMG_SIZE=512
+IMG_SIZE=64
 GENERATOR_LEARNING_RATE=0.001 # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
 DISCRIMINATOR_LEARNING_RATE=0.001
-BETA_1=0.9 # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
+BETA_1=0.0 # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
 BETA_2=0.99
 EPSILON=1e-8
-BATCH_SIZE=8
+BATCH_SIZE=16
 NUM_BATCHES=10000
-DATA_FOLDER=f"datasets/abstract/512"
-SAVE_INTERVAL=500 
+DATA_FOLDER=f"datasets/cats/64"
+SAVE_INTERVAL=100 
 
 # Generator parameters
-LATENT_DIM=16
-CHANNELS=16
-LATENT_STYLE_LAYERS=1
+LATENT_DIM=4
+CHANNELS=8
+LATENT_STYLE_LAYERS=2
 
 # Discriminator parameters
-FILTERS=16
+FILTERS=8
 
 # Output folder
 now = datetime.now()
@@ -52,9 +52,6 @@ adv.compile(optimizer=adv_optimizer, loss="binary_crossentropy", metrics=['accur
 
 image_generator = data_tools.image_generator.image_generator(BATCH_SIZE, DATA_FOLDER)
 
-discriminator_steps = 0
-generator_steps = 0
-
 for step in range(NUM_BATCHES):
 
     # Discriminator training 
@@ -69,11 +66,12 @@ for step in range(NUM_BATCHES):
     generated_labels = np.ones((BATCH_SIZE, 1))
     
     # Store the best and worst generated image according to the discriminator
-    disc_labels = disc.predict_on_batch(generated_images).flatten()
-    i_max = np.argmax(disc_labels)
-    i_min = np.argmin(disc_labels)
-    tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_max]:.2f}.png", generated_images[i_max])
-    tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_min]:.2f}.png", generated_images[i_min])
+    if step % SAVE_INTERVAL == 0:
+        disc_labels = disc.predict_on_batch(generated_images).flatten()
+        i_max = np.argmax(disc_labels)
+        i_min = np.argmin(disc_labels)
+        tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_max]:.2f}.png", generated_images[i_max])
+        tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_min]:.2f}.png", generated_images[i_min])
 
     # Combine real and generated images
     combined_images = np.concatenate([generated_images, real_images])
