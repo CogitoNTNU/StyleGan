@@ -130,6 +130,26 @@ def get_skip_generator(latent_dim=64, channels=64, target_size=64, latent_style_
     generator = tf.keras.Model(inputs=[dummy_in, latent_in] + noise_inputs, outputs=y, name="generator")
     return generator
 
+def get_dropout_generator(latent_dim=64, channels=64, target_size=64):
+    side_length = 4
+    latent_in = layers.Input(shape=(latent_dim,), name="latent_in")
+    x = layers.Dense(4*4*channels)(latent_in)
+    x = layers.LeakyReLU(alpha=0.2)(x)
+    x = layers.Reshape((side_length, side_length, channels))(x)
+
+    while side_length < target_size:
+        x = layers.Conv2D(filters=channels, kernel_size=(3,3), padding="same")(x)
+        x = layers.LeakyReLU(alpha=0.2)(x)
+        x = layers.Conv2D(filters=channels, kernel_size=(3,3), padding="same")(x)
+        x = layers.LeakyReLU(alpha=0.2)(x)
+        x = layers.UpSampling2D(size=(2, 2), interpolation="bilinear")(x)
+        side_length = 2*side_length
+
+    x = layers.Conv2D(filters=3, kernel_size=(3,3))(x)
+
+    generator = tf.keras.Model(inputs=latent_in, outputs=x, name="generator")
+    return generator
+
 
 def random_generator_input(batch_size, latent_dim, img_size):
     null_input = np.zeros((batch_size, 1))
