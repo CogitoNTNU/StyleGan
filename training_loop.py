@@ -14,16 +14,16 @@ from datetime import datetime
 import os
 import time
 
-IMG_SIZE=64
+IMG_SIZE=512
 GENERATOR_LEARNING_RATE=0.001 # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
 DISCRIMINATOR_LEARNING_RATE=0.001
 BETA_1=0.0 # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
 BETA_2=0.99
 EPSILON=1e-8
-BATCH_SIZE=16
-NUM_BATCHES=10000
-DATA_FOLDER=f"datasets/cats/64"
-SAVE_INTERVAL=10
+BATCH_SIZE=8
+NUM_BATCHES=10000000
+DATA_FOLDER=f"datasets/abstract/512"
+SAVE_INTERVAL=1
 
 # Generator parameters
 LATENT_DIM=8
@@ -39,7 +39,7 @@ now_str = now.strftime("%Y-%m-%d_%H:%M:%S")
 OUTPUT_FOLDER = f"generated_images/{now_str}_{IMG_SIZE}"
 os.mkdir(OUTPUT_FOLDER)
 
-disc = models.discriminator.get_simple_discriminator(IMG_SIZE, filters=FILTERS)
+disc = models.discriminator.get_resnet_discriminator(IMG_SIZE, filters=FILTERS)
 print(disc.summary())
 disc_optimizer=Adam(lr=DISCRIMINATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
 disc.compile(optimizer=disc_optimizer, loss="binary_crossentropy", metrics=['accuracy'])

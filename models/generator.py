@@ -137,19 +137,37 @@ def get_dropout_generator(latent_dim=64, channels=64, target_size=64):
     x = layers.LeakyReLU(alpha=0.2)(x)
     x = layers.Reshape((side_length, side_length, channels))(x)
 
+    dropout_inputs = []
     while side_length < target_size:
+        # 2x Conv2D
         x = layers.Conv2D(filters=channels, kernel_size=(3,3), padding="same")(x)
         x = layers.LeakyReLU(alpha=0.2)(x)
         x = layers.Conv2D(filters=channels, kernel_size=(3,3), padding="same")(x)
         x = layers.LeakyReLU(alpha=0.2)(x)
+
+        # Dropout entire channels
+        s = layers.Input(shape=(channels,))
+        dropout_inputs.append(s)
+        s = layers.Reshape((1,1,channels))(s)
+        x = layers.Lambda(scale_channels)([s, x])
+        
+        # Upsampling
         x = layers.UpSampling2D(size=(2, 2), interpolation="bilinear")(x)
         side_length = 2*side_length
 
-    x = layers.Conv2D(filters=3, kernel_size=(3,3))(x)
+    x = layers.Conv2D(filters=3, kernel_size=(3,3), padding="same")(x)
 
-    generator = tf.keras.Model(inputs=latent_in, outputs=x, name="generator")
+    generator = tf.keras.Model(inputs=[latent_in] + dropout_inputs, outputs=x, name="generator")
     return generator
 
+
+def random_dropout_input(batch_size, latent_size, channels, img_size, alpha=0.2):
+    latent_noise = np.random.normal(size=(batch_size,latent_size))
+    dropout_noise = []
+    num_upsamples = int(math.log2(img_size)-2)
+    for i in range(num_upsamples):
+        dropout_noise.append(np.random.choice([1.0, 0.0], size=(batch_size, channels), replace=True, p=[1.0-alpha, alpha]))
+    return [latent_noise, *dropout_noise]
 
 def random_generator_input(batch_size, latent_dim, img_size):
     null_input = np.zeros((batch_size, 1))

@@ -2,7 +2,7 @@ import models.silence
 import models.adverserial
 import models.discriminator
 import models.generator
-from models.generator import random_generator_input
+from models.generator import random_dropout_input
 import data_tools.image_generator
 from tensorflow.keras.optimizers import Adam, SGD
 import tensorflow as tf
@@ -17,21 +17,20 @@ import time
 IMG_SIZE=64
 GENERATOR_LEARNING_RATE=0.001 # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
 DISCRIMINATOR_LEARNING_RATE=0.001
-BETA_1=0.0 # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
+BETA_1=0.9 # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
 BETA_2=0.99
 EPSILON=1e-8
-BATCH_SIZE=16
+BATCH_SIZE=8
 NUM_BATCHES=10000
 DATA_FOLDER=f"datasets/cats/64"
 SAVE_INTERVAL=10
 
 # Generator parameters
 LATENT_DIM=8
-CHANNELS=16
-LATENT_STYLE_LAYERS=2
+CHANNELS=8
 
 # Discriminator parameters
-FILTERS=16
+FILTERS=8
 
 # Output folder
 now = datetime.now()
@@ -44,7 +43,7 @@ print(disc.summary())
 disc_optimizer=Adam(lr=DISCRIMINATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
 disc.compile(optimizer=disc_optimizer, loss="binary_crossentropy", metrics=['accuracy'])
 
-gen = models.generator.get_skip_generator(latent_dim=LATENT_DIM, channels=CHANNELS, target_size=IMG_SIZE, latent_style_layers=LATENT_STYLE_LAYERS)
+gen = models.generator.get_dropout_generator(latent_dim=LATENT_DIM, channels=CHANNELS, target_size=IMG_SIZE)
 print(gen.summary())
 adv = models.adverserial.get_adverserial(gen, disc)
 adv_optimizer=Adam(lr=GENERATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
@@ -61,7 +60,7 @@ for step in range(NUM_BATCHES):
     real_labels = np.zeros((BATCH_SIZE,1))
 
     # Generate a batch of images
-    gen_input = random_generator_input(BATCH_SIZE, LATENT_DIM, IMG_SIZE)
+    gen_input = random_dropout_input(BATCH_SIZE, LATENT_DIM, CHANNELS, IMG_SIZE)
     generated_images = gen.predict(gen_input)
     generated_labels = np.ones((BATCH_SIZE, 1))
     
