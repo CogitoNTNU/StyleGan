@@ -23,16 +23,44 @@ smallfont = pygame.font.SysFont('Corbel', 30)
 nextText = smallfont.render('Generate new picture', True, (0, 0, 0))
 quitText = smallfont.render('X', True, (0, 0, 0))
 
+# Generate random nooise to be used for all generated pictures
+r_noise_input = random_generator_input(1, 512, IMG_SIZE)
+r_noise2 = r_noise_input.copy()
+r_noise2[1] = np.random.normal(size=(1,512))
+
+print(r_noise2[1])
+
+placeholder = r_noise_input.copy()
+
+counter = 0
+n = 100
+
+def update_latent_vector():
+    current_latent = (r_noise_input.copy()[1]*(n-counter) + r_noise2.copy()[1]*counter)/n
+    r_noise_input[1] = current_latent.copy()
+
+
 
 def generate_image():
-    r_noise_input = random_generator_input(1, 512, IMG_SIZE)
     image = gen.predict(r_noise_input)[0]
     image = (image+1)*127.5
     image = image.astype(np.uint8)
     return image
 def updateImage():
+    global counter
+    global r_noise_input
+    global r_noise2
+    global n
     image = generate_image()
     image = pygame.surfarray.make_surface(image)
+
+    if counter <= n:
+        counter += 1
+
+    update_latent_vector()
+
+
+    print(counter)
 
     rect = image.get_rect()
     rect.center = w/2, h/2
@@ -53,7 +81,8 @@ def getQuitButtonRect():
 
 image, rect = updateImage()
 
-
+time_elapsed_since_last_action = 0
+clock = pygame.time.Clock()
 while running:
     nextButtonRect = getNextButtonRect()
     quitButtonRect = getQuitButtonRect()
@@ -63,9 +92,15 @@ while running:
                 image, rect = updateImage()
             if quitButtonRect.collidepoint(event.pos):
                 running = False
-         if event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 image, rect = updateImage()
+
+    dt = clock.tick() 
+    time_elapsed_since_last_action += dt
+    if time_elapsed_since_last_action > 50:
+        image, rect = updateImage()
+    
     screen.fill((0, 0, 0))
     screen.blit(image, rect)
     pygame.draw.rect(screen, (34, 139, 34), [68, h-45, 265, 28])
