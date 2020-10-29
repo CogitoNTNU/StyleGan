@@ -73,10 +73,10 @@ def get_resnet_discriminator(img_size, filters=16):
 
     x = Flatten()(x)
     x = Dropout(rate=0.2)(x)
-    x = Dense(4*4*filters)(x)
+    x = Dense(filters)(x)
     x = LeakyReLU(alpha=0.2)(x)
     x = Dropout(rate=0.2)(x)
-    x = Dense(4*4*filters)(x)
+    x = Dense(filters)(x)
     x = LeakyReLU(alpha=0.2)(x)
     x = Dense(1, activation="sigmoid")(x)
 

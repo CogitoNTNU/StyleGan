@@ -14,24 +14,24 @@ from datetime import datetime
 import os
 import time
 
-IMG_SIZE=512
-GENERATOR_LEARNING_RATE=0.001 # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
-DISCRIMINATOR_LEARNING_RATE=0.001
-BETA_1=0.0 # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
-BETA_2=0.99
-EPSILON=1e-8
-BATCH_SIZE=8
-NUM_BATCHES=10000000
-DATA_FOLDER=f"datasets/abstract/512"
-SAVE_INTERVAL=1
+IMG_SIZE = 64
+GENERATOR_LEARNING_RATE = 0.001  # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
+DISCRIMINATOR_LEARNING_RATE = 0.001
+BETA_1 = 0.0  # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
+BETA_2 = 0.99
+EPSILON = 1e-8
+BATCH_SIZE = 8
+NUM_BATCHES = 10000000
+DATA_FOLDER = "datasets/cats/64"
+SAVE_INTERVAL = 10
 
 # Generator parameters
-LATENT_DIM=8
-CHANNELS=16
-LATENT_STYLE_LAYERS=2
+LATENT_DIM = 8
+CHANNELS = 16
+LATENT_STYLE_LAYERS = 2
 
 # Discriminator parameters
-FILTERS=16
+FILTERS = 16
 
 # Output folder
 now = datetime.now()
@@ -41,45 +41,64 @@ os.mkdir(OUTPUT_FOLDER)
 
 disc = models.discriminator.get_resnet_discriminator(IMG_SIZE, filters=FILTERS)
 print(disc.summary())
-disc_optimizer=Adam(lr=DISCRIMINATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
-disc.compile(optimizer=disc_optimizer, loss="binary_crossentropy", metrics=['accuracy'])
+disc_optimizer = Adam(
+    lr=DISCRIMINATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON
+)
+disc.compile(optimizer=disc_optimizer, loss="binary_crossentropy", metrics=["accuracy"])
 
-gen = models.generator.get_skip_generator(latent_dim=LATENT_DIM, channels=CHANNELS, target_size=IMG_SIZE, latent_style_layers=LATENT_STYLE_LAYERS)
+gen = models.generator.get_skip_generator(
+    latent_dim=LATENT_DIM,
+    channels=CHANNELS,
+    target_size=IMG_SIZE,
+    latent_style_layers=LATENT_STYLE_LAYERS,
+)
 print(gen.summary())
 adv = models.adverserial.get_adverserial(gen, disc)
-adv_optimizer=Adam(lr=GENERATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
-adv.compile(optimizer=adv_optimizer, loss="binary_crossentropy", metrics=['accuracy'])
+adv_optimizer = Adam(
+    lr=GENERATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON
+)
+adv.compile(optimizer=adv_optimizer, loss="binary_crossentropy", metrics=["accuracy"])
 
 image_generator = data_tools.image_generator.image_generator(BATCH_SIZE, DATA_FOLDER)
 
 for step in range(NUM_BATCHES):
 
-    # Discriminator training 
+    # Discriminator training
 
     # Load a batch of real images and label them as zeroes
     real_images = next(image_generator)
-    real_labels = np.zeros((BATCH_SIZE,1))
+    real_labels = np.zeros((BATCH_SIZE, 1))
 
     # Generate a batch of images
     gen_input = random_generator_input(BATCH_SIZE, LATENT_DIM, IMG_SIZE)
     generated_images = gen.predict(gen_input)
     generated_labels = np.ones((BATCH_SIZE, 1))
-    
+
     # Store the best and worst generated image according to the discriminator
     if step % SAVE_INTERVAL == 0:
         disc_labels = disc.predict_on_batch(generated_images).flatten()
         i_max = np.argmax(disc_labels)
         i_min = np.argmin(disc_labels)
-        tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_max]:.2f}.png", generated_images[i_max])
-        tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_min]:.2f}.png", generated_images[i_min])
+        tf.keras.preprocessing.image.save_img(
+            f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_max]:.2f}.png",
+            generated_images[i_max],
+        )
+        tf.keras.preprocessing.image.save_img(
+            f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_min]:.2f}.png",
+            generated_images[i_min],
+        )
 
     # Combine real and generated images
     combined_images = np.concatenate([generated_images, real_images])
     combined_labels = np.concatenate([generated_labels, real_labels])
 
-    disc_loss = disc.train_on_batch([combined_images], combined_labels, return_dict=True)
+    disc_loss = disc.train_on_batch(
+        [combined_images], combined_labels, return_dict=True
+    )
 
     # Train generator to fool discriminator (discriminator should label generated images as real)
-    target_labels = np.zeros((BATCH_SIZE,1))
+    target_labels = np.zeros((BATCH_SIZE, 1))
     adv_loss = adv.train_on_batch(gen_input, target_labels, return_dict=True)
-    print(f"step {step}, discriminator accuracy: {disc_loss['accuracy']:.2f}, generator accuracy: {adv_loss['accuracy']:.2f}")
+    print(
+        f"step {step}, discriminator accuracy: {disc_loss['accuracy']:.2f}, generator accuracy: {adv_loss['accuracy']:.2f}"
+    )
