@@ -33,10 +33,10 @@ r_noise2[1] = np.random.normal(size=(1,512))
 placeholder = r_noise_input.copy()
 
 counter = 0
-n = 1000
+n = 100
 
 def update_latent_vector():
-    current_latent = (r_noise_input.copy()[1]*(n-counter) + r_noise2.copy()[1]*counter)/n
+    current_latent = (placeholder.copy()[1]*(n-counter) + r_noise2.copy()[1]*counter)/n
     r_noise_input[1] = current_latent.copy()
 
 
