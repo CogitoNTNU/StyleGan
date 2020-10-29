@@ -28,7 +28,7 @@ def resize_images(image_array,new_size=(64,64)):
 #Saves a numpy array to file_path as a h5 file.
 def save_images_to_h5py(images,file_path):
     h5f = h5py.File(file_path, "w")
-    h5f.create_dataset('images', data=images)
+    h5f.create_dataset("images", data=images)
     h5f.close()
 
 #Loads a .h5 file from file_path
@@ -51,9 +51,13 @@ def load_and_convert_images_from_folder(folder_path, package_size, image_target_
 
 
 if __name__ == "__main__":
-    #load_and_convert_images_from_folder("datasets/abstract_art_512",64,(64,64))
+    # abstract
+    #load_and_convert_images_from_folder("datasets/abstract_art_512", 64, (64,64), output_folder="datasets/abstract/64")
     #load_and_convert_images_from_folder("datasets/abstract_art_512", 128, (256,256), output_folder="datasets/abstract/256")
-    load_and_convert_images_from_folder("datasets/abstract_art_512", 64, (512,512), output_folder="datasets/abstract/512")
+    load_and_convert_images_from_folder("datasets/abstract_art_512", 128, (512,512), output_folder="datasets/abstract/512")
+    #load_and_convert_images_from_folder("datasets/abstract_art_singleton", 2, (64,64), output_folder="datasets/abstract/singleton_64")
+    # cats
+    #load_and_convert_images_from_folder("datasets/cats_64", 256, (64,64), output_folder="datasets/cats/64")
 
 
 
