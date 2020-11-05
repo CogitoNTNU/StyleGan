@@ -2,7 +2,7 @@ import numpy as np
 from models.generator import random_generator_input
 import cv2
 # saves an mp4 file that interpolates between the latent vectors in latent_list
-# Takes in an instance of a generator, the omage size, the latent vectors to interpolate between and the filename of the video
+# Takes in an instance of a generator, the image size, the latent vectors to interpolate between, and the filename of the video
 #
 def generate_interpolation_mp4(generator,img_size, latent_list, seconds_pr_image=1, savePath="video.avi"):
     num_vectors = len(latent_list)
