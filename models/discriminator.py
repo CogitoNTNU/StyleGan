@@ -6,10 +6,10 @@ from tensorflow.keras import Input, Model
 
 def get_resnet_discriminator(img_size=(64, 64), filters=16, dense_units=64):
 
-    img_width = img_size[0]
-    img_height = img_size[1]
-    
-    z = Input(shape=(img_width, img_height, 3))
+    img_width = img_size[1]
+    img_height = img_size[0]
+
+    z = Input(shape=(img_height, img_width, 3))
 
     # fRGB 
     x = Conv2D(filters, kernel_size=1, padding="same")(z)
@@ -21,9 +21,12 @@ def get_resnet_discriminator(img_size=(64, 64), filters=16, dense_units=64):
         # Pass x through separate convolutional and downsampling blocks (resnet)
 
         # Convolution
-        x1 = Conv2D(filters, kernel_size=3, padding="same", kernel_initializer="random_normal")(x)
+        x1 = Dropout(rate=0.2)(x)
+        x1 = Conv2D(filters, kernel_size=3, padding="same", kernel_initializer="random_normal")(x1)
         x1 = BatchNormalization()(x1)
         x1 = LeakyReLU(alpha=0.2)(x1)
+        
+        x1 = Dropout(rate=0.2)(x)
         x1 = Conv2D(filters, kernel_size=3, padding="same", kernel_initializer="random_normal")(x1)
         x1 = BatchNormalization()(x1)
         x1 = LeakyReLU(alpha=0.2)(x1)

@@ -8,6 +8,10 @@
 
 Another good dataset for debugging: https://www.kaggle.com/spandan2/cats-faces-64x64-for-generative-models
 
+### ImageMagick commands
+
+`./magick mogrify -gravity center -crop 2:3 -quality 85 -resize 512x768 -monitor test/*.jpg`
+
 ## IDUN notes
 
 Login: `ssh -l <username> idun-login1.hpc.ntnu.no`

@@ -50,14 +50,14 @@ def style_block(x, latent_in, noise_in, channels=64, latent_style_layers=2, upsa
 
 
 def get_skip_generator(start_size=(4,4), target_size=(64, 64), latent_dim=64, channels=64, latent_style_layers=2):
-    width = start_size[0]
-    height = start_size[1]
-    target_width = target_size[0]
+    height = start_size[0]
+    width = start_size[1]
+    target_width = target_size[1]
 
     # Learnable constant image
     dummy_in = layers.Input(shape=(1,), name="dummy_in")
-    x = layers.Dense(width * height * channels, name="const_img", kernel_initializer="zeros", bias_initializer="random_normal")(dummy_in)
-    x = layers.Reshape((width, height, channels))(x)
+    x = layers.Dense(height * width * channels, name="const_img", kernel_initializer="zeros", bias_initializer="random_normal")(dummy_in)
+    x = layers.Reshape((height, width, channels))(x)
 
     # RGB output
     y = layers.Conv2D(filters=3, kernel_size=(3, 3), kernel_initializer="random_normal", bias_initializer="zeros", activation="tanh", padding="same")(x)
@@ -68,42 +68,43 @@ def get_skip_generator(start_size=(4,4), target_size=(64, 64), latent_dim=64, ch
     noise_inputs = []
     while width < target_width:
         # Style block without upsampling
-        noise_in = layers.Input(shape=(width, height, 1), name=f"noise_in_{width}x{height}")
+        noise_in = layers.Input(shape=(height, width, 1), name=f"noise_in_{height}x{width}")
         noise_inputs.append(noise_in)
-        x = style_block(x, latent_in, noise_in, channels=channels, latent_style_layers=latent_style_layers, upsample=False, name=f"{width}x{height}")
+        x = style_block(x, latent_in, noise_in, channels=channels, latent_style_layers=latent_style_layers, upsample=False, name=f"{height}x{width}")
 
         # Style block with upsampling
-        width = 2*width
         height = 2*height
-        noise_in = layers.Input(shape=(width, height, 1), name=f"noise_in_upsample_{width}x{height}")
+        width = 2*width
+        noise_in = layers.Input(shape=(height, width, 1), name=f"noise_in_upsample_{height}x{width}")
         noise_inputs.append(noise_in)
-        x = style_block(x, latent_in, noise_in, channels=channels, latent_style_layers=latent_style_layers, upsample=True, name=f"upsample_{width}x{height}")
+        x = style_block(x, latent_in, noise_in, channels=channels, latent_style_layers=latent_style_layers, upsample=True, name=f"upsample_{height}x{width}")
 
         # Convert deep image to RGB
-        z = layers.Conv2D(filters=3, kernel_size=(3, 3), kernel_initializer="random_normal", bias_initializer="zeros", activation="tanh", padding="same", name=f"to_rgb_{width}x{height}")(x)
+        z = layers.Conv2D(filters=3, kernel_size=(3, 3), kernel_initializer="random_normal", bias_initializer="zeros", activation="tanh", padding="same", name=f"to_rgb_{height}x{width}")(x)
 
         # Upsample current RGB and add deep RGB
-        y = layers.UpSampling2D(size=(2, 2), interpolation="bilinear", name=f"rgb_upsampling_{width}x{height}")(y)
-        y = layers.Add(name=f"add_deep_rgb_{width}x{height}")([y, z])
+        y = layers.UpSampling2D(size=(2, 2), interpolation="bilinear", name=f"rgb_upsampling_{height}x{width}")(y)
+        y = layers.Add(name=f"add_deep_rgb_{height}x{width}")([y, z])
 
     generator = tf.keras.Model(inputs=[dummy_in, latent_in] + noise_inputs, outputs=y, name="generator")
     return generator
 
-def random_generator_input(batch_size, latent_dim, start_size=(2,2), target_size=(64,64)):
+
+def random_generator_input(batch_size, latent_dim, start_size=(4,4), target_size=(64,64)):
     dummy_input = np.zeros((batch_size, 1))
     latent_noise = np.random.normal(size=(batch_size, latent_dim))
     noises = []
 
-    width = start_size[0]
-    height = start_size[1]
+    height = start_size[0]
+    width = start_size[1]
 
-    num_upsamles = int(math.log2(target_size[0]/start_size[0]))
-    noises.append(np.random.normal(size=(batch_size, width, height, 1)))
-    for i in range(1, num_upsamles):
-        width = 2*width
+    num_upsamples = int(math.log2(target_size[1]/start_size[1]))
+    noises.append(np.random.normal(size=(batch_size, height, width, 1)))
+    for i in range(1, num_upsamples):
         height = 2*height
-        noises.append(np.random.normal(size=(batch_size, width, height, 1)))
-        noises.append(np.random.normal(size=(batch_size, width, height, 1)))
+        width = 2*width
+        noises.append(np.random.normal(size=(batch_size, height, width, 1)))
+        noises.append(np.random.normal(size=(batch_size, height, width, 1)))
     
     noises.append(np.random.normal(size=(batch_size, target_size[0], target_size[1], 1)))
-    return [null_input, z_noise, *noises]
+    return [dummy_input, latent_noise, *noises]
