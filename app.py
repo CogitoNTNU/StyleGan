@@ -10,7 +10,8 @@ import numpy as np
 from models.generator import random_generator_input
 import cv2
 import glob
-IMG_SIZE = 512
+IMG_SIZE = 128
+LATENT_SIZE = 512
 
 gen = models.generator.get_generator(latent_dim=512, channels=64, target_size=IMG_SIZE, latent_style_layers=2)
 gen.compile("adam","binary_crossentropy")
@@ -24,20 +25,32 @@ gen.compile("adam","binary_crossentropy")
 # nextText = smallfont.render('Generate new picture', True, (0, 0, 0))
 # quitText = smallfont.render('X', True, (0, 0, 0))
 
+num_vectors = 4
 # Generate random nooise to be used for all generated pictures
-r_noise_input = random_generator_input(1, 512, IMG_SIZE)
-r_noise2 = r_noise_input.copy()
-r_noise2[1] = np.random.normal(size=(1,512))
+r_noise_input = random_generator_input(1, LATENT_SIZE, IMG_SIZE)
+r_latent = np.random.normal(size=(num_vectors,LATENT_SIZE))
 
 
 placeholder = r_noise_input.copy()
 
 counter = 0
-n = 100
+frames_pr_second = 20
+frames_pr_image= 50
+
+
 
 def update_latent_vector():
-    current_latent = (placeholder.copy()[1]*(n-counter) + r_noise2.copy()[1]*counter)/n
+    current_latent = np.zeros((1, LATENT_SIZE))
+    current_latent[0] = (r_latent[counter//frames_pr_image]*(frames_pr_image-counter%frames_pr_image) +
+                         r_latent[counter//frames_pr_image+1]*(counter%frames_pr_image))/frames_pr_image
     r_noise_input[1] = current_latent.copy()
+
+def update_latent_vector_return():
+    current_latent = np.zeros((1, LATENT_SIZE))
+    current_latent[0] = (r_latent[-1]*(frames_pr_image-counter%frames_pr_image) +
+                         r_latent[0]*(counter%frames_pr_image))/frames_pr_image
+    r_noise_input[1] = current_latent.copy()
+
 
 
 
@@ -54,10 +67,13 @@ def updateImage():
     image = generate_image()
     #image = pygame.surfarray.make_surface(image)
 
-    if counter <= n:
+    if counter <= frames_pr_image*(num_vectors-1)-2:
         counter += 1
+        update_latent_vector()
 
-    update_latent_vector()
+    elif counter <= frames_pr_image*(num_vectors)-2:
+        counter += 1
+        update_latent_vector_return()
 
 
     print(counter)
@@ -67,73 +83,15 @@ def updateImage():
     return image#, rect
 
 
-def getNextButtonRect():
-    rect = nextText.get_rect()
-    rect.center = w/2, h-30
-    return rect
-
-
-def getQuitButtonRect():
-    rect = quitText.get_rect()
-    rect.center = w-28, h-30
-    return rect
-
-
 img_array = []
 img = updateImage()
-while counter <= n:
+while counter <= frames_pr_image*(num_vectors)-2:
     img = updateImage()
     img_array.append(img)
 
-# for image in img_array:
-#     cv2.imshow('Color image', image)
-#     import time
-#     time.sleep(4)
-#     cv2.destroyAllWindows()
 
-out = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 30, (512,512))
+out = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), frames_pr_second, (IMG_SIZE,IMG_SIZE))
  
 for i in range(len(img_array)):
     out.write(img_array[i])
 out.release()
-
-
-# for img_index in range(len(img_array)):
-#     cv2.imshow('Color image', img_array[img_index])
-#     cv2.waitKey(0)
-#     cv2.destroyAllWindows()
-
-
-
-
-# image, rect = updateImage()
-
-# time_elapsed_since_last_action = 0
-# clock = pygame.time.Clock()
-# while running:
-#     nextButtonRect = getNextButtonRect()
-#     quitButtonRect = getQuitButtonRect()
-#     for event in pygame.event.get():
-#         if event.type == MOUSEBUTTONDOWN:
-#             if nextButtonRect.collidepoint(event.pos):
-#                 image, rect = updateImage()
-#             if quitButtonRect.collidepoint(event.pos):
-#                 running = False
-#         if event.type == pygame.KEYDOWN:
-#             if event.key == pygame.K_RETURN:
-#                 image, rect = updateImage()
-
-#     dt = clock.tick() 
-#     time_elapsed_since_last_action += dt
-#     if time_elapsed_since_last_action > 50:
-#         image, rect = updateImage()
-    
-#     screen.fill((0, 0, 0))
-#     screen.blit(image, rect)
-#     pygame.draw.rect(screen, (34, 139, 34), [68, h-45, 265, 28])
-#     pygame.draw.rect(screen, (255, 0, 0), [w-40, h-45, 25, 27])
-#     screen.blit(quitText, quitButtonRect)
-#     screen.blit(nextText, nextButtonRect)
-#     pygame.display.update()
-
-# pygame.quit()
