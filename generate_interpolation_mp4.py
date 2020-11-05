@@ -10,6 +10,7 @@ def generate_interpolation_mp4(generator,img_size, latent_list, seconds_pr_image
     latent_size = latent_list[0].shape[-1]
     r_noise_input = random_generator_input(1, latent_size, img_size)
     r_latent = latent_list
+    r_noise_input[1][0] = r_latent[0]
 
 
     frames_pr_second = 60
@@ -56,7 +57,6 @@ def generate_interpolation_mp4(generator,img_size, latent_list, seconds_pr_image
         # rect.center = w/2, h/2
         return image  # , rect
 
-    img = updateImage()
     img_array = []
     while counter <= frames_pr_image * (num_vectors) - 2:
         img = updateImage()
