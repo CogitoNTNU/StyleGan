@@ -3,13 +3,13 @@ from pygame.locals import *
 import random
 import cv2
 import time
+import os
 import models.generator
 import models.adverserial
 import models.discriminator
 from tensorflow.keras.optimizers import Adam
 import numpy as np
 from models.generator import random_generator_input
-import cv2
 import glob
 IMG_SIZE = 256
 LATENT_SIZE = 512
@@ -30,50 +30,41 @@ nextText = smallfont.render('Generate new', True, (0, 0, 0))
 saveText = smallfont.render('Save Image', True, (0, 0, 0))
 quitText = smallfont.render('X', True, (0, 0, 0))
 
-# Generate random nooise to be used for all generated pictures
-
+# Generate random noise to be used for all generated pictures in an epoch
 def generate_new():
-    global r_noise_input, r_noises
+    global r_noise_input, r_noises, placeholder
     r_noise_input = random_generator_input(1, 512, IMG_SIZE)
-    r_noise2 = r_noise_input.copy()
-    r_noise3 = r_noise_input.copy()
-    r_noise4 = r_noise_input.copy()
-    r_noise5 = r_noise_input.copy()
-    r_noise6 = r_noise_input.copy()
-    r_noise7 = r_noise_input.copy()
-    r_noise8 = r_noise_input.copy()
-    r_noise9 = r_noise_input.copy()
-    r_noise2[1] = np.random.normal(size=(1,512))
-    r_noise3[1] = np.random.normal(size=(1,512))
-    r_noise4[1] = np.random.normal(size=(1,512))
-    r_noise5[1] = np.random.normal(size=(1,512))
-    r_noise6[1] = np.random.normal(size=(1,512))
-    r_noise7[1] = np.random.normal(size=(1,512))
-    r_noise8[1] = np.random.normal(size=(1,512))
-    r_noise9[1] = np.random.normal(size=(1,512))
-    r_noises = [r_noise_input, r_noise2, r_noise3, r_noise4, r_noise5, r_noise6, r_noise7, r_noise8, r_noise9]
+    r_noises = []
     placeholder = r_noise_input.copy()
-
+    for x in range(9):
+        noise = r_noise_input.copy()
+        noise[1] = np.random.normal(size=(1,512))
+        r_noises.append(noise)
+    
+# Initialize noises
 generate_new()
 
 
-
+# Inintialize variables for latent space simulation
 n = 10
 counter = 0
 
 
 def update_latent_vector():
+    # Updates latent space vector image based on timestep count
     current_latent = (placeholder.copy()[1]*(n-counter) + r_noise2.copy()[1]*counter)/n
     r_noise_input[1] = current_latent.copy()
 
 
 def generate_image(noise=r_noise_input):
+    # Create an image given a noise input vector
     image = gen.predict(noise)[0]
     image = (image+1)*127.5
     image = image.astype(np.uint8)
     return image
 
 def updateImage():
+    # return images and grid coordinates for each image center
     global counter
     global r_noises
     global n
@@ -105,17 +96,25 @@ def updateImage():
 
 
 def getNextButtonRect():
+    # returns center coordinates for "Generate New" text
     rect = nextText.get_rect()
     rect.center = IMG_SIZE*3+20 + ((w-20)-(IMG_SIZE*3+20))/2, 40
     return rect
 
+def getSaveImageRect():
+    # returns center coordinates for "Save Image" text
+    rect = saveText.get_rect()
+    rect.center = IMG_SIZE*3+10 + ((w-20)-(IMG_SIZE*3+20))/2, 140
+    return rect
 
 def getQuitButtonRect():
+    # returns center coordinates for "X" text on quit button
     rect = quitText.get_rect()
     rect.center = w-28, h-30
     return rect
 
 def draw_save_buttons(button_color=(34, 139, 34)):
+    # Draw 3x3 grid of squares with a given color
     for x in range(3):
         for y in range(3):
             pygame.draw.rect(screen, button_color, [IMG_SIZE*3+20+x*90, 160+(90*y), 80, 80])
@@ -125,24 +124,25 @@ def blit_and_update_screen(button_color=(34, 139, 34)):
     screen.fill((180, 180, 180))
     for i in range(len(images)):
         screen.blit(images[i], rects[i])
-    # Generate_new box
+    # generate "Generate new" box
     pygame.draw.rect(screen, button_color, [IMG_SIZE*3+20, 20, (w-20)-(IMG_SIZE*3+20), 40])
 
     pygame.draw.rect(screen, (255, 0, 0), [w-40, h-45, 25, 27]) # Exit box
-    draw_save_buttons()
+    draw_save_buttons(button_color) # Generate save buttons
 
     # Blit button text
     screen.blit(quitText, quitButtonRect)
     screen.blit(nextText, nextButtonRect)
-    #screen.blit(saveText, nextButtonRect)
+    screen.blit(saveText, saveTextRect)
 
-    # Update
+    # Update screen changes
     pygame.display.update()
 
 images, rects = updateImage()
 
 nextButtonRect = getNextButtonRect()
 quitButtonRect = getQuitButtonRect()
+saveTextRect = getSaveImageRect()
 
 def mouse_in_generate_new(mouse):
     return IMG_SIZE*3+20 < mouse[0] < (w-20) and 20 < mouse[1] < 60
@@ -158,12 +158,14 @@ while running:
     for event in pygame.event.get():
         if event.type == MOUSEBUTTONDOWN:
             if mouse_in_generate_new(mouse):
-                # updates color in generate new rectangle and updates images
+                # updates color and updates images
                 generate_new()
-                pygame.draw.rect(screen, (255,0,0), [IMG_SIZE*3+20, 20, (w-20)-(IMG_SIZE*3+20), 40])
-                pygame.display.update()
+                blit_and_update_screen((64, 148, 245))
+                # pygame.draw.rect(screen, (64, 148, 245), [IMG_SIZE*3+20, 20, (w-20)-(IMG_SIZE*3+20), 40])
+                # pygame.display.update()
                 images, rects = updateImage()
             if mouse_in_save_image(mouse):
+                # Finds out which image you want saved, and saves images to destination folder
                 img_pointed_at = []
                 x = [IMG_SIZE*3+20+(2*90), IMG_SIZE*3+20+90, IMG_SIZE*3+20]
                 y = [160+90*2, 160+90, 160]
@@ -175,17 +177,22 @@ while running:
                     if mouse[1] > y[i]:
                         img_pointed_at.append(2-i)
                         break
-                print(img_pointed_at)
+                blit_and_update_screen((64, 148, 245))
+                pygame.display.update()
+                time.sleep(0.3)
                 saved_image = cv2.cvtColor(original_images[img_pointed_at[0]+3*(img_pointed_at[1])],cv2.COLOR_BGR2RGB)
-                cv2.imwrite(str(time.time())+".jpeg", saved_image)
+                cv2.imwrite(os.path.join("saved_images/",str(time.time())+".jpeg"), saved_image)
                 
             if mouse_in_exit_square(mouse):
+                # exits program if you press exit button
                 running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
+                # Generate new image if Enter key is pressed
                 generate_new()
-                pygame.draw.rect(screen, (255,0,0), [IMG_SIZE*3+20, 20, (w-20)-(IMG_SIZE*3+20), 40])
-                pygame.display.update()
+                blit_and_update_screen((64, 148, 245))
+                # pygame.draw.rect(screen, (64, 148, 245), [IMG_SIZE*3+20, 20, (w-20)-(IMG_SIZE*3+20), 40])
+                # pygame.display.update()
                 images, rects = updateImage()
     blit_and_update_screen()
 
