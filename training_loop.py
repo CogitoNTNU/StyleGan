@@ -16,27 +16,25 @@ import time
 
 # Keras prefers height x width
 START_SIZE = (6, 4)
-TARGET_SIZE = (768, 512) 
-GENERATOR_LEARNING_RATE = 0.002  # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
-DISCRIMINATOR_LEARNING_RATE = 0.002
+TARGET_SIZE = (96, 64) 
+GENERATOR_LEARNING_RATE = 0.0005  # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
+DISCRIMINATOR_LEARNING_RATE = 0.0005
 BETA_1 = 0.0  # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
 BETA_2 = 0.99
 EPSILON = 1e-8
-BATCH_SIZE = 4
+BATCH_SIZE = 1
 NUM_BATCHES = 10000000
-DATA_FOLDER = "datasets/plants/768x512"
-SAVE_INTERVAL = 10
+DATA_FOLDER = "datasets/plants/96x64"
+SAVE_INTERVAL = 50
 
 # Generator parameters
-LATENT_DIM = 8
-CHANNELS = 16
-LATENT_STYLE_LAYERS = 2
+LATENT_DIM = 64
+CHANNELS = 64
+LATENT_STYLE_LAYERS = 4
 
 # Discriminator parameters
-FILTERS = 16
-DENSE_UNITS = 32
-DROPOUT = True
-BATCH_NORM = True
+FILTERS = 64
+DENSE_UNITS = 64
 
 # Output folder
 now = datetime.now()
@@ -85,6 +83,8 @@ for step in range(NUM_BATCHES):
         disc_labels = disc.predict_on_batch(generated_images).flatten()
         for i in range(BATCH_SIZE):
             tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{i}_{disc_labels[i]:.2f}.png", generated_images[i])
+            # tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_real_{i}.png", real_images[i])
+
 
     # Combine real and generated images
     combined_images = np.concatenate([generated_images, real_images])

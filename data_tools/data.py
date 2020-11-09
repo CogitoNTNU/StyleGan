@@ -65,7 +65,8 @@ if __name__ == "__main__":
     # cats
     #load_and_convert_images_from_folder("datasets/cats_64", 256, (64,64), output_folder="datasets/cats/64")
     # plants
-    load_and_convert_images_from_folder("datasets/plants_768x512", 64, (768,512), output_folder="datasets/plants/768x512", resize=False)
+    #load_and_convert_images_from_folder("datasets/plants_768x512", 64, (768,512), output_folder="datasets/plants/768x512", resize=False)
+    load_and_convert_images_from_folder("datasets/plants_768x512", 128, (96,64), output_folder="datasets/plants/96x64", resize=True)
 
 
 
