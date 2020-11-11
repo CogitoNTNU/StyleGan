@@ -3,4 +3,5 @@
 __pycache__/
 /datasets
 /generated_images
+/trained_models
 *.jpg

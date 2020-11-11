@@ -4,7 +4,6 @@ from tensorflow.keras import layers
 import numpy as np
 import math
 
-
 def normalize_channel_std(x):
     epsilon = 1e-6
     std = keras.backend.std(x, axis=[-3, -2], keepdims=True) # Should result in (BATCH, 1, 1, CHANNELS) output shape

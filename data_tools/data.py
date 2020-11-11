@@ -59,14 +59,15 @@ def load_and_convert_images_from_folder(folder_path, package_size, image_target_
 if __name__ == "__main__":
     # abstract
     #load_and_convert_images_from_folder("datasets/abstract_art_512", 64, (64,64), output_folder="datasets/abstract/64")
-    #load_and_convert_images_from_folder("datasets/abstract_art_512", 128, (256,256), output_folder="datasets/abstract/256")
-    #load_and_convert_images_from_folder("datasets/abstract_art_512", 128, (512,512), output_folder="datasets/abstract/512")
+    load_and_convert_images_from_folder("datasets/abstract_art_512", 128, (256,256), output_folder="datasets/abstract/256")
+    #load_and_convert_images_from_folder("datasets/abstract_art_512", 64, (512,512), output_folder="datasets/abstract/512")
     #load_and_convert_images_from_folder("datasets/abstract_art_singleton", 2, (64,64), output_folder="datasets/abstract/singleton_64")
     # cats
     #load_and_convert_images_from_folder("datasets/cats_64", 256, (64,64), output_folder="datasets/cats/64")
     # plants
     #load_and_convert_images_from_folder("datasets/plants_768x512", 64, (768,512), output_folder="datasets/plants/768x512", resize=False)
-    load_and_convert_images_from_folder("datasets/plants_768x512", 128, (96,64), output_folder="datasets/plants/96x64", resize=True)
+    #load_and_convert_images_from_folder("datasets/plants_768x512", 128, (96,64), output_folder="datasets/plants/96x64", resize=True)
+    #load_and_convert_images_from_folder("datasets/plants_768x512", 64, (192,128), output_folder="datasets/plants/192x128", resize=True)
 
 
 

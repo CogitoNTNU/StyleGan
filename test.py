@@ -3,11 +3,9 @@ import models.discriminator
 import models.generator
 import tensorflow as tf
 
-discriminator = models.discriminator.get_resnet_discriminator(img_size=(384, 256))
-print(discriminator.summary())
-# tf.keras.utils.plot_model(discriminator, "discriminator.png", show_shapes=True)
+dataset = tf.keras.preprocessing.image_dataset_from_directory("datasets/keras_abstract/", label_mode=None, batch_size=32, image_size=(512, 512))
+dataset = dataset.map(lambda x: x/127.5 -1.0).prefetch(8)
 
-generator = models.generator.get_skip_generator(start_size=(6,4), target_size=(384, 256))
-#tf.keras.utils.plot_model(generator, "generator.png", show_shapes=True)
 
-print(generator.summary())
+for batch in dataset:
+    print(batch)
