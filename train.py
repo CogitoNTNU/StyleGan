@@ -12,16 +12,17 @@ import os
 START_SIZE = (4, 4)
 TARGET_SIZE = (512, 512) 
 
-SAVE_INTERVAL = 20
+MODEL_SAVE_INTERVAL = 1000
+SAVE_INTERVAL = 10
 EPOCHS = 1000
 
 # Generator parameters
 LATENT_DIM = 16
-CHANNELS = 16
+CHANNELS = 32
 LATENT_STYLE_LAYERS = 2
 
 # Discriminator parameters
-FILTERS = 16
+FILTERS = 32
 DENSE_UNITS = 16
 BATCH_SIZE = 4
 
@@ -29,10 +30,12 @@ now = datetime.now()
 now_str = now.strftime("%Y-%m-%d_%H:%M:%S")
 OUTPUT_FOLDER = f"generated_images/{now_str}_{TARGET_SIZE[0]}x{TARGET_SIZE[1]}"
 os.mkdir(OUTPUT_FOLDER)
+MODEL_FOLDER = f"trained_models/{now_str}_{TARGET_SIZE[0]}x{TARGET_SIZE[1]}"
+os.mkdir(MODEL_FOLDER)
 
 # Optimizer
-DISCRIMINATOR_LEARNING_RATE = 0.0005
-GENERATOR_LEARNING_RATE = 0.0005
+DISCRIMINATOR_LEARNING_RATE = 0.00025
+GENERATOR_LEARNING_RATE = 0.00025
 BETA_1 = 0.0 
 BETA_2 = 0.99
 EPSILON = 0.00001
@@ -43,20 +46,22 @@ discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate=DISCRIMINATOR_L
 # generator_optimizer = tf.keras.optimizers.SGD(learning_rate=GENERATOR_LEARNING_RATE)
 # discriminator_optimizer = tf.keras.optimizers.SGD(learning_rate=DISCRIMINATOR_LEARNING_RATE)
 
-discriminator = models.discriminator.get_resnet_discriminator(
-    img_size=TARGET_SIZE, 
-    filters=FILTERS, 
-    dense_units=DENSE_UNITS
-)
+# discriminator = models.discriminator.get_resnet_discriminator(
+#     img_size=TARGET_SIZE, 
+#     filters=FILTERS, 
+#     dense_units=DENSE_UNITS
+# )
+# print(discriminator.summary())
+discriminator = tf.keras.models.load_model("trained_models/artist/discriminator_30000.h5")
 print(discriminator.summary())
-
-generator = models.generator.get_skip_generator(
-    start_size=START_SIZE,
-    target_size=TARGET_SIZE,
-    latent_dim=LATENT_DIM,
-    channels=CHANNELS,
-    latent_style_layers=LATENT_STYLE_LAYERS,
-)
+# generator = models.generator.get_skip_generator(
+#     start_size=START_SIZE,
+#     target_size=TARGET_SIZE,
+#     latent_dim=LATENT_DIM,
+#     channels=CHANNELS,
+#     latent_style_layers=LATENT_STYLE_LAYERS,
+# )
+generator = tf.keras.models.load_model("trained_models/artist/generator_30000.h5")
 print(generator.summary())
 
 dataset = tf.keras.preprocessing.image_dataset_from_directory("datasets/keras_abstract/", label_mode=None, batch_size=BATCH_SIZE, image_size=TARGET_SIZE)
@@ -144,10 +149,15 @@ for epoch in range(EPOCHS):
     for image_batch in dataset:
         print(step)
         train_step(image_batch)
+        
         if(step % SAVE_INTERVAL == 0):
             noise = tf_random_generator_input(BATCH_SIZE, LATENT_DIM, start_size=START_SIZE, target_size=TARGET_SIZE)
             generated_images = generator(noise, training=False)
             for i in range(BATCH_SIZE):
                 tf.keras.preprocessing.image.save_img(f"{OUTPUT_FOLDER}/{step}_{i}.png", generated_images[i])
+
+        if(step % MODEL_SAVE_INTERVAL == 0):
+            generator.save(f"{MODEL_FOLDER}/generator_{step}.h5")
+            discriminator.save(f"{MODEL_FOLDER}/discriminator_{step}.h5")
 
         step = step + 1
