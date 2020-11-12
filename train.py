@@ -34,8 +34,8 @@ MODEL_FOLDER = f"trained_models/{now_str}_{TARGET_SIZE[0]}x{TARGET_SIZE[1]}"
 os.mkdir(MODEL_FOLDER)
 
 # Optimizer
-DISCRIMINATOR_LEARNING_RATE = 0.00025
-GENERATOR_LEARNING_RATE = 0.00025
+DISCRIMINATOR_LEARNING_RATE = 0.0005
+GENERATOR_LEARNING_RATE = 0.0005
 BETA_1 = 0.0 
 BETA_2 = 0.99
 EPSILON = 0.00001
@@ -43,25 +43,22 @@ EPSILON = 0.00001
 generator_optimizer = tf.keras.optimizers.Adam(learning_rate=GENERATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
 discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate=DISCRIMINATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON)
 
-# generator_optimizer = tf.keras.optimizers.SGD(learning_rate=GENERATOR_LEARNING_RATE)
-# discriminator_optimizer = tf.keras.optimizers.SGD(learning_rate=DISCRIMINATOR_LEARNING_RATE)
-
-# discriminator = models.discriminator.get_resnet_discriminator(
-#     img_size=TARGET_SIZE, 
-#     filters=FILTERS, 
-#     dense_units=DENSE_UNITS
-# )
-# print(discriminator.summary())
-discriminator = tf.keras.models.load_model("trained_models/artist/discriminator_30000.h5")
+discriminator = models.discriminator.get_resnet_discriminator(
+    img_size=TARGET_SIZE, 
+    filters=FILTERS, 
+    dense_units=DENSE_UNITS
+)
 print(discriminator.summary())
-# generator = models.generator.get_skip_generator(
-#     start_size=START_SIZE,
-#     target_size=TARGET_SIZE,
-#     latent_dim=LATENT_DIM,
-#     channels=CHANNELS,
-#     latent_style_layers=LATENT_STYLE_LAYERS,
-# )
-generator = tf.keras.models.load_model("trained_models/artist/generator_30000.h5")
+#discriminator = tf.keras.models.load_model("trained_models/artist/discriminator_30000.h5")
+print(discriminator.summary())
+generator = models.generator.get_skip_generator(
+    start_size=START_SIZE,
+    target_size=TARGET_SIZE,
+    latent_dim=LATENT_DIM,
+    channels=CHANNELS,
+    latent_style_layers=LATENT_STYLE_LAYERS,
+)
+#generator = tf.keras.models.load_model("trained_models/artist/generator_30000.h5")
 print(generator.summary())
 
 dataset = tf.keras.preprocessing.image_dataset_from_directory("datasets/keras_abstract/", label_mode=None, batch_size=BATCH_SIZE, image_size=TARGET_SIZE)
@@ -76,10 +73,6 @@ def discriminator_loss(real_output, fake_output):
     total_loss = real_loss + fake_loss
     return total_loss
 
-
-def image_diversity_loss(generated_images):
-    pixel_std = tf.math.reduce_std(generated_images, axis=0)
-    return -tf.reduce_mean(pixel_std)
 
 def generator_loss(fake_output):
     return cross_entropy(tf.ones_like(fake_output), fake_output)
@@ -116,22 +109,14 @@ def train_step(images):
 
         tf.print("real_output", real_output)
         tf.print("fake_output", fake_output)
-        #tf.print("image diversity loss", image_diversity_loss(generated_images))
-
-        #fake_diversity = -10*tf.math.reduce_std(fake_output)
-        #tf.print("fake diversity loss", fake_diversity)
-
-        # Avoid mode collapse by adding a hidden layer diversity loss from the discriminator
-        # Try going over the model?
-
-
 
         min_clip = 0.001
         max_clip = 0.999
+
         real_output = tf.clip_by_value(real_output, min_clip, max_clip)
         fake_output = tf.clip_by_value(fake_output, min_clip, max_clip)
 
-        gen_loss = generator_loss(fake_output) #+ image_diversity_loss(generated_images) + fake_diversity
+        gen_loss = generator_loss(fake_output)
         disc_loss = discriminator_loss(real_output, fake_output)
 
         tf.print("gen_loss", gen_loss)
