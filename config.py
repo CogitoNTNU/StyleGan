@@ -22,7 +22,7 @@ BETA_2 = 0.99
 EPSILON = 1e-8
 BATCH_SIZE = 8
 NUM_BATCHES = 10000000
-SAVE_INTERVAL = 200
+SAVE_INTERVAL = 200 # Saves when # batches has been processed.
 
 # Generator parameters
 LATENT_DIM = 8
