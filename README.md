@@ -1,4 +1,20 @@
-# StyleGan
+# StyleGAN2
+StyleGAN2 is an GAN architecture which provides state-of-the-art results in data-driven unconditional generative image modeling. This implementation is based on a [research paper from NVIDIA from 2020](https://arxiv.org/abs/1912.04958)
+
+## What is a GAN
+Two neural networks contest with each other in a game. Given a training set, this technique learns to generate new data with the same statistics as the training set. [Learn more about GAN here](https://machinelearningmastery.com/what-are-generative-adversarial-networks-gans/)
+
+## About us
+
+
+## Motivation
+
+
+## Results
+
+## Improvements
+
+## Train on your own
 
 ## Data
 
