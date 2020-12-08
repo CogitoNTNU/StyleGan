@@ -10,14 +10,21 @@ import models.discriminator
 from tensorflow.keras.optimizers import Adam
 import numpy as np
 from models.generator import random_generator_input
+from config import IMG_SIZE, LATENT_DIM, CHANNELS, LATENT_STYLE_LAYERS, USE_UNTRAINED_MODEL, MODEL_APP_WEIGHTS
 import glob
-IMG_SIZE = 512
-VISUAL_IMG_SIZE = IMG_SIZE/2
-LATENT_SIZE = 512
+
+VISUAL_IMG_SIZE = 256
 
 # initialize model
-gen = models.generator.get_generator(latent_dim=512, channels=64, target_size=IMG_SIZE, latent_style_layers=2)
+gen = models.generator.get_skip_generator(
+    latent_dim=LATENT_DIM,
+    channels=CHANNELS,
+    target_size=IMG_SIZE,
+    latent_style_layers=LATENT_STYLE_LAYERS,)
 gen.compile("adam","binary_crossentropy")
+
+if not USE_UNTRAINED_MODEL:
+    gen.load_weights(MODEL_APP_WEIGHTS)
 
 # Initialize pygame
 pygame.init()
@@ -43,11 +50,11 @@ interpolation_imagesText = bigfont.render(Interpolation_textfield, True, (0, 0, 
 # Generate random noise to be used for all generated pictures in an epoch
 def generate_new():
     global r_noise_input, r_noises
-    r_noise_input = random_generator_input(1, 512, IMG_SIZE)
+    r_noise_input = random_generator_input(1, LATENT_DIM, IMG_SIZE)
     r_noises = []
     for x in range(9):
         noise = r_noise_input.copy()
-        noise[1] = np.random.normal(size=(1,512))
+        noise[1] = np.random.normal(size=(1,LATENT_DIM))
         r_noises.append(noise)
     
 # Initialize noises

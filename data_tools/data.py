@@ -3,8 +3,6 @@ import cv2
 import numpy as np
 import h5py
 import random
-
-
 # Loops through a list of paths, loads the image, and converts the pixel values from [0,256] to [-1,1]
 def load_images_from_list(original_path,path_list):
 
@@ -39,6 +37,7 @@ def load_images_from_hdf5(file_path):
     return images
 
 def load_and_convert_images_from_folder(folder_path, package_size, image_target_size, output_folder="datasets/images"):
+    os.makedirs(output_folder, exist_ok=True)
     image_paths = os.listdir(folder_path)
     random.shuffle(image_paths)
     packages = (len(image_paths)//package_size) + 1
@@ -48,16 +47,6 @@ def load_and_convert_images_from_folder(folder_path, package_size, image_target_
         images = load_images_from_list(folder_path,image_paths[i*package_size:(i+1)*package_size])
         images = resize_images(images,image_target_size)
         save_images_to_h5py(images, output_folder + "/" + str(i)+".h5")
-
-
-if __name__ == "__main__":
-    # abstract
-    #load_and_convert_images_from_folder("datasets/abstract_art_512", 64, (64,64), output_folder="datasets/abstract/64")
-    #load_and_convert_images_from_folder("datasets/abstract_art_512", 128, (256,256), output_folder="datasets/abstract/256")
-    load_and_convert_images_from_folder("datasets/abstract_art_512", 128, (512,512), output_folder="datasets/abstract/512")
-    #load_and_convert_images_from_folder("datasets/abstract_art_singleton", 2, (64,64), output_folder="datasets/abstract/singleton_64")
-    # cats
-    #load_and_convert_images_from_folder("datasets/cats_64", 256, (64,64), output_folder="datasets/cats/64")
 
 
 

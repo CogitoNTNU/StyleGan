@@ -6,7 +6,9 @@ from models.generator import random_generator_input
 import data_tools.image_generator
 from tensorflow.keras.optimizers import Adam, SGD
 import tensorflow as tf
-
+from config import IMG_SIZE, CONTINUE_TRAINING, MODEL_TRAIN_GEN_WEIGHTS, MODEL_TRAIN_DISC_WEIGHTS, \
+    GENERATOR_LEARNING_RATE, DISCRIMINATOR_LEARNING_RATE, BETA_1, BETA_2, EPSILON, BATCH_SIZE, NUM_BATCHES, \
+    DATA_FOLDER, SAVE_INTERVAL, LATENT_DIM, CHANNELS, LATENT_STYLE_LAYERS, FILTERS
 import numpy as np
 import math
 import cv2
@@ -14,30 +16,13 @@ from datetime import datetime
 import os
 import time
 
-IMG_SIZE = 64
-GENERATOR_LEARNING_RATE = 0.001  # Default 0.002 Apparently the latent FC mapping network has a 100x lower learning rate? (appendix B)
-DISCRIMINATOR_LEARNING_RATE = 0.001
-BETA_1 = 0.0  # Exponential decay rate for first moment estimates, BETA_1=0 in the paper. Makes sense since the discriminator changes?
-BETA_2 = 0.99
-EPSILON = 1e-8
-BATCH_SIZE = 8
-NUM_BATCHES = 10000000
-DATA_FOLDER = "datasets/cats/64"
-SAVE_INTERVAL = 10
-
-# Generator parameters
-LATENT_DIM = 8
-CHANNELS = 16
-LATENT_STYLE_LAYERS = 2
-
-# Discriminator parameters
-FILTERS = 16
-
 # Output folder
 now = datetime.now()
-now_str = now.strftime("%Y-%m-%d_%H:%M:%S")
+now_str = now.strftime("%Y-%m-%d_%H-%M-%S")
 OUTPUT_FOLDER = f"generated_images/{now_str}_{IMG_SIZE}"
+os.makedirs("generated_images", exist_ok=True)
 os.mkdir(OUTPUT_FOLDER)
+os.makedirs("weights",exist_ok=True)
 
 disc = models.discriminator.get_resnet_discriminator(IMG_SIZE, filters=FILTERS)
 print(disc.summary())
@@ -50,14 +35,21 @@ gen = models.generator.get_skip_generator(
     latent_dim=LATENT_DIM,
     channels=CHANNELS,
     target_size=IMG_SIZE,
-    latent_style_layers=LATENT_STYLE_LAYERS,
+    latent_style_layers=LATENT_STYLE_LAYERS
 )
+
 print(gen.summary())
 adv = models.adverserial.get_adverserial(gen, disc)
 adv_optimizer = Adam(
     lr=GENERATOR_LEARNING_RATE, beta_1=BETA_1, beta_2=BETA_2, epsilon=EPSILON
 )
 adv.compile(optimizer=adv_optimizer, loss="binary_crossentropy", metrics=["accuracy"])
+
+
+if CONTINUE_TRAINING:
+    gen.load_weights(MODEL_TRAIN_GEN_WEIGHTS)
+    disc.load_weights(MODEL_TRAIN_DISC_WEIGHTS)
+
 
 image_generator = data_tools.image_generator.image_generator(BATCH_SIZE, DATA_FOLDER)
 
@@ -87,6 +79,10 @@ for step in range(NUM_BATCHES):
             f"{OUTPUT_FOLDER}/{step}_{disc_labels[i_min]:.2f}.png",
             generated_images[i_min],
         )
+        now = datetime.now()
+        now_str = now.strftime("%Y-%m-%d_%H-%M-%S")
+        gen.save_weights(os.path.join("weights", "gen_" + now_str+".h5"))
+        disc.save_weights(os.path.join("weights", "disc_" + now_str+".h5"))
 
     # Combine real and generated images
     combined_images = np.concatenate([generated_images, real_images])
