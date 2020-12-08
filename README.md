@@ -30,7 +30,7 @@ We could also consider hosting an application on a website with different models
 The current h5 files take up around 50GB of space for 512x512 resolution! So we will rather give the steps to how you can train your own version.
 
 
-* First you need to install python
+* First you need to install python. 3.6 and 3.7 is proven to work. Other python versions are used at your own risk
 
 * Run pip install -r requirements.txt in the project folder. This will install all the required libraries.
  
