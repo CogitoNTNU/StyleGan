@@ -22,7 +22,7 @@ The image below shows an pygame application to easily create new images, save th
 ## Improvements
 The easiest change we could make would be to train the system longer. NVIDIA ran their model for 51 GPU-years with Titan graphic cards, while we trained the models on a couple of days with modern graphic cards.  
 
-Another major improvement would be to use a month worth of training time to really hoan in the right learning rate, model size and model shape before commiting to letting the model train for real.  
+Another major improvement would be to use a month worth of training time to really hone in the right learning rate, model size and model shape before commiting to letting the model train for real.  
 
 We could also consider hosting an application on a website with different models to make our creation more usable.
 
